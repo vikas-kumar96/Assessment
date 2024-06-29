@@ -1,0 +1,102 @@
+package Demopackage;
+
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+
+public class Assessment {
+   //	I have added all the dependencies before writing my script
+	
+	WebDriver driver;
+	WebDriverWait wait;
+
+    @BeforeTest
+    public void bfrtst() throws InterruptedException {
+    	
+    	WebDriverManager.chromedriver().setup();
+    // Create a new instance of the Chrome driver
+        driver = new ChromeDriver();
+        wait = new WebDriverWait(driver, 10);
+     // Navigate to the OrangeHRM login page        
+        driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/auth/login");
+//		Maximise the window
+        driver.manage().window().maximize();
+//       Given time to load the work the code perfectly
+	    Thread.sleep(3000);
+ 
+     
+    }
+
+    @Test(priority = 1)
+    public void login() throws InterruptedException
+    	
+    	{   Thread.sleep(1000);
+//	    Find the username input fields and written the username as Admin
+		driver.findElement(By.name("username")).sendKeys("Admin");
+
+//		Giving time to update the information
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		
+//	    Find the password input fields and written the password 
+		driver.findElement(By.name("password")).sendKeys("admin123"); 
+		
+		// Find the login button and click it
+		driver.findElement(By.cssSelector("button[type=\"submit\"]")).click();    }
+    
+    
+    @Test(priority = 2)
+    public void navigate_admin() throws InterruptedException
+    {	Thread.sleep(3000);
+    driver.findElement(By.xpath("//a[@class=\"oxd-main-menu-item\"]")).click();
+    
+    driver.findElement(By.xpath(" //span[@class=\"oxd-topbar-body-nav-tab-item\" and .='User Management ']")).click(); 
+
+    driver.findElement(By.xpath("//a[@class=\"oxd-topbar-body-nav-tab-link\"]")).click();
+		
+    }
+    
+    @Test(priority = 3, dependsOnMethods = "navigate_admin")
+    public void selectEmployee() {
+    	
+            WebElement employeeDropdown = driver.findElement(By.id("searchSystemUser_employeeName_empName"));
+            employeeDropdown.sendKeys("Ranga Akunuri");
+            // Additional code may be needed to select from the dropdown if suggestions appear
+      }
+    
+    
+    @Test(priority = 4, dependsOnMethods = "selectEmployee")
+    public void assertEmployeeStatus() {
+        // Assuming the web table has an ID or unique identifier
+        WebElement table = driver.findElement(By.id("resultTable"));
+        boolean found = false;
+        for (WebElement row : table.findElements(By.tagName("tr"))) {
+            WebElement nameCell = row.findElement(By.xpath(".//td[2]")); // Adjust the XPath according to the column
+            if (nameCell.getText().equals("James Butler")) {
+                WebElement statusCell = row.findElement(By.xpath(".//td[5]")); // Adjust the XPath according to the column
+                Assert.assertEquals(statusCell.getText(), "Enabled");
+                found = true;
+                break;
+            }
+        }
+        Assert.assertTrue(found, "James Butler not found in the table");
+    }
+
+    
+    @AfterTest
+    public void tearDown() {
+        driver.findElement(By.id("welcome")).click();
+        driver.findElement(By.linkText("Logout")).click();
+        driver.quit();
+    }
+}
